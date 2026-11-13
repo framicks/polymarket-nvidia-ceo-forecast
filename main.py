@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Forecast Polymarket's "Next CEO of NVIDIA?" Yes prices, 4 hours ahead.
 
-Model (backtested on the kit's six practice cases, loss 0.2727 vs the house
+Model (backtested on the kit's six practice cases, loss 0.2667 vs the house
 baseline's 0.3636, mean pinball loss in percentage points):
 
 - Persistence median: each market's price stays at its checkpoint price.
@@ -15,7 +15,10 @@ baseline's 0.3636, mean pinball loss in percentage points):
   these thin markets swing between calm and jumpy. A floor keeps quiet
   markets honest: sigma >= max(0.0002, 0.005 * sqrt(x * (1 - x))), since
   even a market that has not moved in two hours can jump (Colette Kress
-  went 0.3535 -> 0.59 in one minute in the practice data).
+  went 0.3535 -> 0.59 in one minute in the practice data). Sigma is capped
+  at 0.01: a single jump inflates the 120-minute estimate, and the capped
+  markets (Eric Schmidt, Colette Kress, Nick Parker) all score better with
+  the tighter cap (0.2667 vs 0.2727 at cap 0.02).
 - Horizon scaling: quantiles widen as h ** 0.38, not sqrt(h). Spreads grow
   slower than a random walk because prices are bounded probabilities that
   spend long stretches unmoved; alpha 0.38 beat 0.30/0.35/0.40/0.45 and
@@ -42,7 +45,7 @@ WINDOW = 120          # minutes of recent history used for sigma
 ALPHA = 0.38          # horizon exponent: spread ~ h ** ALPHA
 ABS_FLOOR = 0.0002    # absolute sigma floor (price units per min**ALPHA)
 REL_FLOOR = 0.005     # sigma >= REL_FLOOR * sqrt(x * (1 - x))
-SIGMA_CAP = 0.02
+SIGMA_CAP = 0.01
 
 
 def price6(x):
